@@ -61,10 +61,7 @@ class Store(with_metaclass(MetaSingleton, object)):
             self.broker = broker
 
     def stop(self):
-        if self.broker is not None:
-            self.q_ordercreate.put(None)
-            self.q_orderclose.put(None)
-            self.q_account.put(None)
+        pass
 
     def put_notification(self, msg, *args, **kwargs):
         self.notifs.append((msg, args, kwargs))
