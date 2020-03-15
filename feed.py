@@ -27,6 +27,9 @@ class Data(with_metaclass(MetaData, DataBase)):
 
     def __init__(self, **kwargs):
         self.o = self._store(**kwargs)
+        self.prevdt = None
+        self.qlive = None
+        self._state = None
 
     def setenvironment(self, env):
         super().setenvironment(env)
@@ -69,7 +72,6 @@ class Data(with_metaclass(MetaData, DataBase)):
                 ret = self._load_tick(msg)
                 if ret:
                     return True
-                continue
 
     def _load_tick(self, msg):
         dtobj = datetime.utcfromtimestamp(msg['datetime'])

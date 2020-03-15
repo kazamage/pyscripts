@@ -22,7 +22,16 @@ def runstrat():
     datapath = os.path.join(os.path.dirname(__file__), 'ohlc.csv')
     data = btfeeds.BacktraderCSVData(dataname=datapath, name='USDJPY')
     cerebro.adddata(data)
-    cerebro.resampledata(data, name='RE5MIN', timeframe=bt.TimeFrame.Seconds, compression=5)
+    rekwargs = dict(
+        name='RE5MIN',
+        timeframe=bt.TimeFrame.Seconds,
+        compression=5,
+        # bar2edge=False,
+        # adjbartime=False,
+        # rightedge=False,
+        # takelate=False,
+    )
+    cerebro.resampledata(data, **rekwargs)
     cerebro.run()
 
 

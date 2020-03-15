@@ -55,8 +55,7 @@ def runstrat():
     )
     cerebro.resampledata(d, **rekwargs)
     cerebro.addstrategy(TestStrategy)
-    # cerebro.run(exactbars=1)
-    cerebro.run()
+    cerebro.run(exactbars=1)
 
 
 if __name__ == '__main__':

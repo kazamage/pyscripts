@@ -49,7 +49,7 @@ def create_ohlc_data(an, ap):
 
 
 def main():
-    cprice = 10511
+    cprice = 10752
     conn = redis.Redis(host='localhost', port=6379, db=0)
     while True:
         aftprice = [cprice]
