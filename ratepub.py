@@ -59,7 +59,7 @@ def main():
             cprice = aftprice[-1]
         ohlc = create_ohlc_data(aggnum, aftprice)
         dt = datetime.utcnow().replace(microsecond=0)
-        data = {'datetime': f'{dt}',
+        data = {'datetime': dt.timestamp(),
                 'open': ohlc.loc[1, 'open'] / 100,
                 'high': ohlc.loc[1, 'high'] / 100,
                 'low': ohlc.loc[1, 'low'] / 100,
