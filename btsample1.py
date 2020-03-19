@@ -42,20 +42,21 @@ def runstrat():
     s = store.Store()
     b = s.getbroker()
     cerebro.setbroker(b)
-    d = s.getdata(dataname='USDJPY')
+    d = s.getdata(dataname='USDJPY', timeframe=bt.TimeFrame.Seconds, compression=1)
     cerebro.adddata(d)
     rekwargs = dict(
         name='RE5MIN',
         timeframe=bt.TimeFrame.Seconds,
         compression=5,
-        bar2edge=False,
-        adjbartime=False,
-        rightedge=False,
-        takelate=False,
+        bar2edge=True,
+        adjbartime=True,
+        rightedge=True,
+        takelate=True,
     )
     cerebro.resampledata(d, **rekwargs)
     cerebro.addstrategy(TestStrategy)
-    cerebro.run(exactbars=1)
+    # cerebro.run(exactbars=1)
+    cerebro.run()
 
 
 if __name__ == '__main__':
