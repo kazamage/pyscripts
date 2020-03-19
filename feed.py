@@ -38,7 +38,6 @@ def _next(self, datamaster=None, ticks=True):
             self.rewind()
 
             if len(datamaster) == 0:
-                print('fuckkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
                 return False
         else:
             if ticks:
@@ -53,9 +52,6 @@ def _next(self, datamaster=None, ticks=True):
 
 
 class DataClone(bt.DataClone):
-    def islive(self):
-        return True
-
     def start(self):
         super().start()
         datas = self.getenvironment().datas
@@ -68,8 +64,10 @@ class DataClone(bt.DataClone):
         return _next(self, datamaster=datamaster, ticks=ticks)
 
     def _check(self, forcedata=None):
-        if all([hasattr(d, 'last_return') and d.last_return is None for d in self.runtime_datas]):
-            return
+        if not self.is_data0() and self.runtime_datas:
+            data0 = self.runtime_datas[0]
+            if hasattr(data0, 'last_return') and data0.last_return is None:
+                return
         super()._check(forcedata=forcedata)
 
 
@@ -87,11 +85,6 @@ class DataBase(bt.DataBase):
 
     def next(self, datamaster=None, ticks=True):
         return _next(self, datamaster=datamaster, ticks=ticks)
-
-    def _check(self, forcedata=None):
-        if all([hasattr(d, 'last_return') and d.last_return is None for d in self.runtime_datas]):
-            return
-        super()._check(forcedata=forcedata)
 
     def clone(self, **kwargs):
         return DataClone(dataname=self, **kwargs)
@@ -133,7 +126,6 @@ class Data(with_metaclass(MetaData, DataBase)):
 
     def start(self):
         super().start()
-        self.qlive = queue.Queue()
         self._state = self._ST_OVER
         self.o.start(data=self)
         self._start_finish()
