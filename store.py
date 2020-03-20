@@ -1,10 +1,49 @@
 import collections
-import json
+import random
 import threading
+import time
+from datetime import datetime, timedelta
 
-import redis
+import backtrader as bt
+import pandas as pd
+import pytz
 from backtrader.metabase import MetaParams
 from backtrader.utils.py3 import queue, with_metaclass
+
+
+def calc_random_price(cp, rng, rng2flg, rng2p, rng2):
+    while True:
+        rng2judg = random.randint(0, rng2p - 1)
+        rndnum = random.randint(0, 1)
+        if rng2flg == 1 and rng2judg == 0:
+            rng = rng2
+        rndwdt = random.randint(0, rng)
+        if rndnum == 0:
+            varnum = cp - rndwdt
+        elif rndnum == 1:
+            varnum = cp + rndwdt
+        if varnum > 0:
+            break
+    return varnum
+
+
+def create_ohlc_data(an, ap):
+    tempdf = pd.DataFrame(columns=['open', 'high', 'low', 'close'])
+    cnt = 1
+    while True:
+        if len(ap) == 0:
+            break
+        wlst = ap[0:an]
+        del ap[0:an]
+        oprc = wlst[0]
+        hprc = max(wlst)
+        lprc = min(wlst)
+        cprc = wlst[-1]
+        tempdf = tempdf.append(
+            pd.DataFrame({'open': [oprc], 'high': [hprc], 'low': [lprc], 'close': [cprc]}, index=[cnt]))
+        cnt = cnt + 1
+    tempdf = tempdf[['open', 'high', 'low', 'close']]
+    return tempdf
 
 
 class MetaSingleton(MetaParams):
@@ -54,18 +93,55 @@ class Store(with_metaclass(MetaSingleton, object)):
         self.notifs.append(None)
         return [x for x in iter(self.notifs.popleft, None)]
 
-    def streaming_prices(self, dataname):
+    def streaming_prices(self, dataname, timeframe, compression, price):
         q = queue.Queue()
-        kwargs = {'q': q, 'dataname': dataname}
+        kwargs = {'q': q,
+                  'dataname': dataname,
+                  'timeframe': timeframe,
+                  'compression': compression,
+                  'price': price}
         t = threading.Thread(target=self._t_streaming_prices, kwargs=kwargs)
         t.daemon = True
         t.start()
         return q
 
-    def _t_streaming_prices(self, dataname, q):
-        conn = redis.Redis(host='localhost', port=6379, db=0)
-        pubsub = conn.pubsub()
-        pubsub.subscribe([dataname])
-        for data in pubsub.listen():
-            if data['type'] == 'message':
-                q.put(json.loads(data['data'].decode('utf-8')))
+    def _t_streaming_prices(self, q, dataname, timeframe, compression, price):
+        varrng = 5
+        actrng2flg = 1
+        rng2prob = 100
+        varrng2 = 10
+        aggnum = 10
+        cprice = price
+        if timeframe == bt.TimeFrame.Seconds:
+            tkwargs = {'seconds': compression}
+            rkwargs = {'microsecond': 0}
+        elif timeframe == bt.TimeFrame.Minutes:
+            tkwargs = {'minutes': compression}
+            rkwargs = {'second': 0, 'microsecond': 0}
+        else:
+            tkwargs = rkwargs = {}
+        if tkwargs:
+            dt = datetime.now(pytz.utc)
+            dt = dt.replace(**rkwargs)
+        while True:
+            aftprice = [cprice]
+            i = 0
+            for i in range(1, aggnum):
+                aftprice.append(calc_random_price(cprice, varrng, actrng2flg, rng2prob, varrng2))
+                cprice = aftprice[-1]
+            ohlc = create_ohlc_data(aggnum, aftprice)
+            if tkwargs:
+                dt += timedelta(**tkwargs)
+                dt = dt.replace(**rkwargs)
+                epoch = float(int(dt.timestamp()))
+            else:
+                epoch = float(int(time.time()))
+            data = {'datetime': epoch,
+                    'open': ohlc.loc[1, 'open'] / 100,
+                    'high': ohlc.loc[1, 'high'] / 100,
+                    'low': ohlc.loc[1, 'low'] / 100,
+                    'close': ohlc.loc[1, 'close'] / 100,
+                    'volume': 0.0,
+                    'openinterest': 0.0}
+            q.put(data)
+            time.sleep(1)

@@ -20,16 +20,14 @@ def runstrat():
     cerebro = bt.Cerebro()
     cerebro.addstrategy(TestStrategy)
     datapath = os.path.join(os.path.dirname(__file__), 'ohlc.csv')
-    data = btfeeds.BacktraderCSVData(dataname=datapath, name='USDJPY')
+    # timeframe = bt.TimeFrame.Seconds
+    timeframe = bt.TimeFrame.Minutes
+    data = btfeeds.BacktraderCSVData(dataname=datapath, name='USDJPY', timeframe=timeframe, compression=1)
     cerebro.adddata(data)
     rekwargs = dict(
         name='RE5MIN',
-        timeframe=bt.TimeFrame.Seconds,
+        timeframe=timeframe,
         compression=5,
-        # bar2edge=False,
-        # adjbartime=False,
-        # rightedge=False,
-        # takelate=False,
     )
     cerebro.resampledata(data, **rekwargs)
     cerebro.run()

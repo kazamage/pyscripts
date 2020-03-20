@@ -1,6 +1,7 @@
 import json
 import random
 import time
+from datetime import datetime
 
 import pandas as pd
 import redis
@@ -50,6 +51,7 @@ def create_ohlc_data(an, ap):
 def main():
     cprice = 10752
     conn = redis.Redis(host='localhost', port=6379, db=0)
+    dt = datetime.utcnow()
     while True:
         aftprice = [cprice]
         i = 0

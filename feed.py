@@ -105,6 +105,7 @@ class MetaData(DataBase.__class__):
 class Data(with_metaclass(MetaData, DataBase)):
     params = (
         ('qcheck', 0.5),
+        ('price', 110.0),
     )
 
     _store = store.Store
@@ -133,7 +134,10 @@ class Data(with_metaclass(MetaData, DataBase)):
         self._st_start()
 
     def _st_start(self):
-        self.qlive = self.o.streaming_prices(self.p.dataname)
+        self.qlive = self.o.streaming_prices(self.p.dataname,
+                                             self.p.timeframe,
+                                             self.p.compression,
+                                             self.p.price)
         self._state = self._ST_LIVE
         return True
 
